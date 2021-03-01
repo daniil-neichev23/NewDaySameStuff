@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using NewDaySameStuff.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +11,10 @@ namespace NewDaySameStuff.Hubs
 {
     public class LikeHub:Hub
     {
-        [Authorize]
-        public async Task Send(string message)
-        {
-            await this.Clients.All.SendAsync("Send", message);
-        }
+        //public async Task Claim(Post post)
+        //{
+        //    await this.Clients.("Receive", post);
+        //}
+        
     }
 }

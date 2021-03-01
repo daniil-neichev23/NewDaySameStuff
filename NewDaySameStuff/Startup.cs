@@ -24,7 +24,7 @@ namespace NewDaySameStuff
         public IConfiguration Configuration { get; }
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddSignalR();
+            
             services.AddTransient<IPasswordValidator<AppUser>, CustomPasswordPolicy>();
             services.AddTransient<IUserValidator<AppUser>, CustomUsernameEmailPolicy>();
             services.AddDbContext<AppDbContext>(
@@ -41,7 +41,9 @@ namespace NewDaySameStuff
                 opts.Password.RequireDigit = true;
             });
             services.ConfigureApplicationCookie(opts => opts.LoginPath = "/Authenticate/Login");
+            services.AddSignalR();
             services.AddControllersWithViews();
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -68,10 +70,8 @@ namespace NewDaySameStuff
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapHub<LikeHub>("/like");
-                endpoints.MapControllerRoute(
-                    name: "default",
-                    pattern: "{controller=Home}/{action=Index}/{id?}");
-                
+                endpoints.MapDefaultControllerRoute();
+
             });
         }
     }

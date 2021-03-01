@@ -17,14 +17,20 @@ namespace NewDaySameStuff.Controllers
         private AppDbContext _context;
 
         private IWebHostEnvironment _appEnvironment;
+        private IHostingEnvironment _hostingEnvironment;
 
         public PostController(AppDbContext context,
-            IWebHostEnvironment appEnvironment)
+            IWebHostEnvironment appEnvironment,
+            IHostingEnvironment hostingEnvironment)
         {
             _context = context;
             _appEnvironment = appEnvironment;
+            _hostingEnvironment = hostingEnvironment;
         }
-
+        public ActionResult Index()
+        {
+            return View(_context.Posts.ToList());
+        }
         public ActionResult Create()
         {
             return View();
@@ -32,34 +38,59 @@ namespace NewDaySameStuff.Controllers
         [Authorize]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(
-            [Bind(include:"PostId,ProfilePicture,Path,Like")] Post post,
-            IFormFile uploadedFile)
+        public ActionResult Create(PostViewModel model)
         {
             if (ModelState.IsValid)
             {
-                if (uploadedFile != null)
+                string uniqueFileName = null;
+                int like = 0;
+                if (model.Photo != null)
                 {
-                    string path = "/Images/" + uploadedFile.FileName;
-                    using (var fileStream = new FileStream(_appEnvironment.WebRootPath + path, FileMode.Create))
-                    {
-                        await uploadedFile.CopyToAsync(fileStream);
-                    }
-                    int like = 0;
-                    post = new Post { ProfilePicture = uploadedFile.FileName, Path = path, Like = like };
-                    _context.Posts.Add(post);
-                    _context.SaveChanges();
-                    return RedirectToAction("Index", "Home");
+                    string uploadsFolder = Path.Combine(_appEnvironment.WebRootPath, "Images");
+                    uniqueFileName = Guid.NewGuid().ToString() + "_" + model.Photo.FileName;
+                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+                    model.Photo.CopyToAsync(new FileStream(filePath, FileMode.Create));
                 }
+                Post post = new Post
+                {
+                    ProfilePicture = model.ProfilePicture,
+                    Path = uniqueFileName,
+                    Like = like,
+                };
+                _context.Add(post);
+                _context.SaveChanges(); 
+                return RedirectToAction("Index", "Home");
             }
             return View();
         }
-        public ActionResult Like(int id)
-        {
-            Post update = _context.Posts.ToList().Find(u => u.PostId == id);
-            update.Like += 1;
-            _context.SaveChanges();
-            return RedirectToAction("Index", "Home");
-        }
+        //public async Task<IActionResult> Create(
+        //    [Bind(include:"PostId,ProfilePicture,Path,Like")] Post post,
+        //    IFormFile uploadedFile)
+        //{
+        //    if (ModelState.IsValid)
+        //    {
+        //        if (uploadedFile != null)
+        //        {
+        //            string path = "/Images/" + uploadedFile.FileName;
+        //            using (var fileStream = new FileStream(_appEnvironment.WebRootPath + path, FileMode.Create))
+        //            {
+        //                await uploadedFile.CopyToAsync(fileStream);
+        //            }
+        //            int like = 0;
+        //            post = new Post { ProfilePicture = uploadedFile.FileName, Path = path, Like = like };
+        //            _context.Posts.Add(post);
+        //            _context.SaveChanges();
+        //            return RedirectToAction("Index", "Home");
+        //        }
+        //    }
+        //    return View();
+        //}
+        //public ActionResult Like(int id)
+        //{
+        //    Post update = _context.Posts.ToList().Find(u => u.PostId == id);
+        //    update.Like += 1;
+        //    _context.SaveChanges();
+        //    return RedirectToAction("Index", "Home");
+        //}
     }
 }

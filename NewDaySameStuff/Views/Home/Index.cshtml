@@ -1,26 +1,52 @@
-﻿@model dynamic
+﻿@model IEnumerable<Post>
+@*dynamic*@
 
 <h1 class="bg-info text-white">Index</h1>
-@Model.String
+@*@Model.String*@
 @if (User?.Identity?.IsAuthenticated ?? false)
 {
     <a asp-controller="Account" asp-action="Logout" class="btn btn-danger">Logout</a>
     <p>
-        @Html.ActionLink("Create New","Create","Post")
+        @Html.ActionLink("Create New", "Create", "Post")
     </p>
     <h3>Все файлы</h3>
     <table class="table">
-        @foreach (Post post in Model.Posts)
+
+        @*@foreach (Post post in Model.Posts)*@
+        @foreach (var post in Model)
         {
-        <tr>
-            <td>
-                @Html.DisplayFor(item => post.ProfilePicture)
-                <img style='width:160px; height:120px;' src="@Url.Content(post.Path)">
-                @Html.DisplayFor(item => post.Like) likes<br />
-                @Html.ActionLink("Like","Like" , new { id =post.PostId})
-            </td>
-        </tr>
+            <tr>
+                <td>
+                    @Html.DisplayFor(item => post.ProfilePicture)
+                    <img style='width:160px; height:120px;' src="@Url.Content(post.Path)" />
+                    @Html.DisplayFor(item => post.Like) likes<br />
+                    @Html.ActionLink("Like", "Like", new { id = post.PostId })
+
+                </td>
+            </tr>
         }
     </table>
-    
+    <form action='@Url.Action("Create")' method="post">
+        <input type="text" name="product" />
+        <input type="submit" value="Send" />
+    </form>
+    <div id="notify"></div>
+
+    <script src="js/signalr/dist/browser/signalr.min.js"></script>
+    <script>
+        const hubConnection = new signalR.HubConnectionBuilder()
+            .withUrl("/like")
+            .build();
+
+        // получение сообщения от сервера
+        hubConnection.on('Notify', function (message) {
+
+            let elem = document.createElement("p");
+            elem.appendChild(document.createTextNode(message));
+
+            document.getElementById("notify").appendChild(elem);
+
+        });
+        hubConnection.start();
+    </script>
 }
